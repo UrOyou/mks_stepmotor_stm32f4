@@ -1,0 +1,12 @@
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/port.c
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/FreeRTOS.h
+mkskeil\port.o: E:\SOFTWARE\WorkStation\Code\Keil5\core\ARM\ARMCC\Bin\..\include\stddef.h
+mkskeil\port.o: E:\SOFTWARE\WorkStation\Code\Keil5\core\ARM\ARMCC\Bin\..\include\stdint.h
+mkskeil\port.o: ../Core/Inc/FreeRTOSConfig.h
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/projdefs.h
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/portable.h
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/deprecated_definitions.h
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/portable/RVDS/ARM_CM4F/portmacro.h
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/mpu_wrappers.h
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/task.h
+mkskeil\port.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/list.h
