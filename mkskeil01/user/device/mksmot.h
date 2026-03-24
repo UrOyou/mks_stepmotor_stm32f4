@@ -31,9 +31,11 @@ void runOK(void);
 
 //速度模式 疑似用不上
 extern void speedModeRun(uint8_t slaveAddr,uint8_t dir,uint16_t speed,uint8_t acc);
-//位置控制
+//位置控制 
+//TODO待补完
 extern void positionMode1Run(uint8_t slaveAddr,uint8_t dir,uint16_t speed,uint8_t acc,uint32_t pulses);
 extern void positionMode2Run(uint8_t slaveAddr,uint16_t speed,uint8_t acc,int32_t relAxis);
+extern void positionMode3Run(uint8_t slaveAddr,uint16_t speed,uint8_t acc,int32_t absAxis);
 
 
 #endif //MKSMOT_H

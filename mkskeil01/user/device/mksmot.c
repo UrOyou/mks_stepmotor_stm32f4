@@ -64,36 +64,6 @@ void NVIC_INIT(void)
   HAL_NVIC_EnableIRQ(CAN1_RX0_IRQn);          // 使能中断
 }
 
-//运行失败
-void runFail(void)
-{
-  while(1)                //快速闪红灯，提示运行失败
-  {
-    LED0(0);
-    delay_ms(200);
-    LED0(1);
-    delay_ms(200);
-  }
-}
-
-//运行成功
-void runOK(void)
-{
-  while(1)                //慢速闪绿灯，提示运行成功
-  {
-    LED1(0);
-    delay_ms(1000);
-    LED1(1);
-    delay_ms(1000);
-  }
-}
-
-  // volatile uint64_t ticks = 0;
-  // uint64_t millis(void)
-  // {
-  // 	return ticks;
-  // }
-
 /**
  * @brief   等待下位机应答，设置超时时间为3000ms
  * @param   delayTime   等待时间(ms)，为0时无限等待
@@ -133,4 +103,29 @@ uint8_t waitingForACK(uint32_t delayTime)
     }
   }
   return(retVal);
+}
+
+//LED指示灯相关
+//运行失败
+void runFail(void)
+{
+  while(1)                //快速闪红灯，提示运行失败
+  {
+    LED0(0);
+    delay_ms(200);
+    LED0(1);
+    delay_ms(200);
+  }
+}
+
+//运行成功
+void runOK(void)
+{
+  while(1)                //慢速闪绿灯，提示运行成功
+  {
+    LED1(0);
+    delay_ms(1000);
+    LED1(1);
+    delay_ms(1000);
+  }
 }
