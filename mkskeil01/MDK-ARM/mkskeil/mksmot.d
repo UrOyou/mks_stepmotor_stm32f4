@@ -31,8 +31,9 @@ mkskeil\mksmot.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 mkskeil\mksmot.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 mkskeil\mksmot.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mkskeil\mksmot.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
+mkskeil\mksmot.o: ../Drivers/CMSIS/Include/core_cm4.h
 mkskeil\mksmot.o: ..\user\bsp\delay.h
 mkskeil\mksmot.o: ..\user\bsp\sys.h
 mkskeil\mksmot.o: ../Drivers/CMSIS/Include/core_cm4.h
-mkskeil\mksmot.o: ..\user\bsp\can.h
 mkskeil\mksmot.o: ..\user\bsp\led.h
+mkskeil\mksmot.o: ..\user\bsp\bsp_can.h

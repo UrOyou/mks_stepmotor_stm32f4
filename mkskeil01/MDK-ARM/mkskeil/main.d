@@ -45,3 +45,8 @@ mkskeil\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/timers.h
 mkskeil\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/queue.h
 mkskeil\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/semphr.h
 mkskeil\main.o: ../Middlewares/Third_Party/FreeRTOS/Source/include/event_groups.h
+mkskeil\main.o: ..\user\device\mksmot.h
+mkskeil\main.o: ..\user\bsp\delay.h
+mkskeil\main.o: ..\user\bsp\sys.h
+mkskeil\main.o: ../Drivers/CMSIS/Include/core_cm4.h
+mkskeil\main.o: ..\user\bsp\bsp_can.h

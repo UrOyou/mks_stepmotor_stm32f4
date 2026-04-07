@@ -46,21 +46,20 @@ uint8_t can_receive_msg(uint32_t id, uint8_t *buf);                             
 
 /************************************************/
 
-//结构定义：
+//结构声明：
+extern CAN_RxHeaderTypeDef uCanRxHeader;  // HAL接收帧头结构体
+extern uint8_t uCanRxData[8];             // 分离的数据缓冲区 HAL接收数据缓冲
+extern CAN_TxHeaderTypeDef uCanTxHeader;  // HAL发送帧头结构体
+extern uint8_t uCanTxData[8];             // 分离的数据缓冲区 HAL发送数据缓冲
+
+extern  volatile uint8_t CAN_RxDone = 0; //判断can接受是否成功
 extern uint16_t CAN_ID;
 typedef unsigned char bool_t;
+
 // 原：CanRxMsg CanRxBuf;（标准库结构体）
 // 原：CanTxMsg CanTxBuf;（标准库结构体）
-extern CAN_RxHeaderTypeDef CanRxHeader;  // HAL接收帧头
-extern uint8_t CanRxData[8];             // HAL接收数据缓冲
-extern CAN_TxHeaderTypeDef CanTxHeader;  // HAL发送帧头
-extern uint8_t CanTxData[8];             // HAL发送数据缓冲
-
 
 extern CAN_HandleTypeDef hcan1;
-
-extern uint16_t CAN_ID;
-extern volatile uint8_t CAN_RxDone;      // 原：boolean_t CAN_RxDone = FALSE;（boolean_t非标准类型）
 
 uint8_t canCRC_ATM(uint8_t *buf, uint8_t len);//计算校验和
 void CAN_INIT(void);
@@ -70,5 +69,5 @@ void CanTransfer(uint8_t *buf, uint8_t len);
 /**************************************************/
 
 
-#endif
+#endif //__CAN_H
 

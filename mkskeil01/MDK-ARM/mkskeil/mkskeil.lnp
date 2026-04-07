@@ -36,7 +36,7 @@
 "mkskeil\key.o"
 "mkskeil\led.o"
 "mkskeil\sys.o"
-"mkskeil\can.o"
+"mkskeil\bsp_can.o"
 "mkskeil\mksmot.o"
 --strict --scatter "mkskeil\mkskeil.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols

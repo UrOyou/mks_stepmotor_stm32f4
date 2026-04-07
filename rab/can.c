@@ -18,7 +18,6 @@
 #include "can.h"
 #include "led.h"
 #include "delay.h"
-#include "main.h"
 #include "string.h"
 
 typedef unsigned char boolean_t;
@@ -26,6 +25,13 @@ CAN_HandleTypeDef       g_canx_handle;                  /* CAN1句柄 */
 CAN_TxHeaderTypeDef     g_canx_txheade;                 /* 发送消息 */
 CAN_RxHeaderTypeDef     g_canx_rxheade;                 /* 接收消息 */
 
+// CAN_RxHeaderTypeDef uCanRxHeader;  // HAL接收帧头结构体
+// uint8_t uCanRxData[8];             // 分离的数据缓冲区 HAL接收数据缓冲
+// CAN_TxHeaderTypeDef uCanTxHeader;  // HAL发送帧头结构体
+// uint8_t uCanTxData[8];             // 分离的数据缓冲区 HAL发送数据缓冲
+// uint8_t CAN_RxDone = 0; //判断can接受是否成功
+
+//示例：can_init(CAN_SJW_1TQ, CAN_BS2_6TQ, CAN_BS1_8TQ, 6, CAN_MODE_LOOPBACK);      /* CAN初始化, 环回模式, 波特率500Kbps */
 /**
  * @brief       CAN初始化
  * @param       tsjw:重新同步跳跃时间单元.范围:CAN_SJW_1TQ~CAN_SJW_4TQ
@@ -93,33 +99,6 @@ uint8_t can_init(uint32_t tsjw, uint32_t tbs2, uint32_t tbs1, uint16_t brp, uint
     return 0;
 }
 
-/**
- * @brief       CAN底层驱动，引脚配置，时钟配置，中断配置
- * @note        此函数会被HAL_CAN_Init()调用
- * @param       hcan:CAN句柄
- * @retval      无;
- */
-// void HAL_CAN_MspInit(CAN_HandleTypeDef *hcan)
-// {
-//     if (CAN1 == hcan->Instance)
-//     {
-//         GPIO_InitTypeDef gpio_init_struct;
-
-//         __HAL_RCC_CAN1_CLK_ENABLE();                        /* 使能CAN1时钟 */
-//         CAN_RX_GPIO_CLK_ENABLE();                           /* CAN_RX脚时钟使能 */
-//         CAN_TX_GPIO_CLK_ENABLE();                           /* CAN_TX脚时钟使能 */
-
-//         gpio_init_struct.Pin = CAN_RX_GPIO_PIN;             /* PA11 */
-//         gpio_init_struct.Mode = GPIO_MODE_AF_PP;            /* 推挽复用 */
-//         gpio_init_struct.Pull = GPIO_PULLUP;                /* 上拉 */
-//         gpio_init_struct.Speed = GPIO_SPEED_FAST;           /* 快速 */
-//         gpio_init_struct.Alternate = GPIO_AF9_CAN1;         /* 复用为CAN1 */
-//         HAL_GPIO_Init(CAN_RX_GPIO_PORT, &gpio_init_struct); /* 初始化IO */
-
-//         gpio_init_struct.Pin = CAN_TX_GPIO_PIN;             /* PA12 */
-//         HAL_GPIO_Init(CAN_TX_GPIO_PORT, &gpio_init_struct); /* CAN_RX脚 必须设置成输入模式 */
-//     }
-// }
 
 #if CAN1_RX0_INT_ENABLE                                     /* 使能RX0中断 */
 
@@ -215,16 +194,6 @@ uint8_t can_receive_msg(uint32_t id, uint8_t *buf)
     return g_canx_rxheade.DLC;
 }
 
-
-
-
-
-CAN_RxHeaderTypeDef CanRxHeader;  // HAL接收帧头结构体
-uint8_t CanRxData[8];             // 分离的数据缓冲区
-CAN_TxHeaderTypeDef CanTxHeader;  // HAL发送帧头结构体
-uint8_t CanTxData[8];             // 分离的数据缓冲区
-
-volatile uint8_t CAN_RxDone = 0;
 /**
  * @brief   初始化CAN
  * @param   无
@@ -267,26 +236,26 @@ void HAL_CAN_RxFifo0MsgPendingCallback(CAN_HandleTypeDef *hcan)
 {
     if (hcan->Instance == CAN1)  // 判断是CAN1
     {
-        HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &CanRxHeader, CanRxData);
-        CAN_RxDone = 1;//ture
+        HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &uCanRxHeader, uCanRxData);
+        // CAN_RxDone = 1;//ture
     }
 }
 
 // CAN发出标准帧
 void CanTransfer(uint8_t *buf, uint8_t len)
 {
-    CanTxHeader.StdId = CAN_ID;             // 原：CanTxBuf.StdId
-    CanTxHeader.ExtId = 0x00;               // 扩展ID（标准帧不用）
-    CanTxHeader.IDE = CAN_ID_STD;           // 原：CAN_ID_STD
-    CanTxHeader.RTR = CAN_RTR_DATA;         // 原：CAN_RTR_DATA
-    CanTxHeader.DLC = len;                  // 原：CanTxBuf.DLC
-    CanTxHeader.TransmitGlobalTime = DISABLE;
+    uCanTxHeader.StdId = CAN_ID;             // 原：CanTxBuf.StdId
+    uCanTxHeader.ExtId = 0x00;               // 扩展ID（标准帧不用）
+    uCanTxHeader.IDE = CAN_ID_STD;           // 原：CAN_ID_STD
+    uCanTxHeader.RTR = CAN_RTR_DATA;         // 原：CAN_RTR_DATA
+    uCanTxHeader.DLC = len;                  // 原：CanTxBuf.DLC
+    uCanTxHeader.TransmitGlobalTime = DISABLE;
 
-    memcpy(CanTxData, buf, len - 1);
-    CanTxData[len - 1] = canCRC_ATM(buf, len - 1);
+    memcpy(uCanTxData, buf, len - 1);
+    uCanTxData[len - 1] = canCRC_ATM(buf, len - 1);
 
     uint32_t TxMailbox;
-    HAL_CAN_AddTxMessage(&hcan1, &CanTxHeader, CanTxData, &TxMailbox);
+    HAL_CAN_AddTxMessage(&hcan1, &uCanTxHeader, uCanTxData, &TxMailbox);
 }
 
 // 计算校验和（算法不变，仅类型调整）
