@@ -1,0 +1,25 @@
+--cpu=Cortex-M4.fp.sp
+"mksf4nofreertos\startup_stm32f429xx.o"
+"mksf4nofreertos\main.o"
+"mksf4nofreertos\stm32f4xx_it.o"
+"mksf4nofreertos\stm32f4xx_hal_msp.o"
+"mksf4nofreertos\stm32f4xx_hal_can.o"
+"mksf4nofreertos\stm32f4xx_hal_rcc.o"
+"mksf4nofreertos\stm32f4xx_hal_rcc_ex.o"
+"mksf4nofreertos\stm32f4xx_hal_flash.o"
+"mksf4nofreertos\stm32f4xx_hal_flash_ex.o"
+"mksf4nofreertos\stm32f4xx_hal_flash_ramfunc.o"
+"mksf4nofreertos\stm32f4xx_hal_gpio.o"
+"mksf4nofreertos\stm32f4xx_hal_dma_ex.o"
+"mksf4nofreertos\stm32f4xx_hal_dma.o"
+"mksf4nofreertos\stm32f4xx_hal_pwr.o"
+"mksf4nofreertos\stm32f4xx_hal_pwr_ex.o"
+"mksf4nofreertos\stm32f4xx_hal_cortex.o"
+"mksf4nofreertos\stm32f4xx_hal.o"
+"mksf4nofreertos\stm32f4xx_hal_exti.o"
+"mksf4nofreertos\system_stm32f4xx.o"
+"mksf4nofreertos\mks.o"
+--strict --scatter "mksf4nofreertos\mksf4nofreertos.sct"
+--summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
+--info sizes --info totals --info unused --info veneers
+--list "mksf4nofreertos.map" -o mksf4nofreertos\mksf4nofreertos.axf

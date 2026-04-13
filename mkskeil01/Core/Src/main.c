@@ -44,11 +44,13 @@
 
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan1;
-
 osThreadId defaultTaskHandle;
 
 uint16_t runSpeed=100;    //电机运行速度
 uint8_t runDir  = 1;      //电机运行方向
+uint8_t ackStatus = 0;
+const int32_t *g_motor_pos_ptr = NULL;   // 全局指针
+int32_t g_motor_pos_value = 0;            // 全局值
 /* USER CODE BEGIN PV */
 
 /* USER CODE END PV */
@@ -139,9 +141,11 @@ int main(void)
   while (1)
   {
     /* USER CODE END WHILE */
-     speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
-     ackStatus = waitingForACK();   //等待电机应答
-     delay_ms(3000);     //延时3000ms
+    const int32_t *pos_ptr = readRealTimeLocation(0x01);    
+    speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+    delay_ms(10);
+    ackStatus = waitingForACK();   //等待电机应答d
+    delay_ms(3000);     //延时3000ms
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */

@@ -33,28 +33,68 @@ uint8_t txBuffer[8];
 uint8_t rxBuffer[8];
 // boolean_t CAN_RxDone = 0;
 
-
-int32_t realTimeLocation;		//电机实时位置
-/*
-功能：读取实时位置信息
-输入：slaveAddr 从机地址
-输出：无
- */
-void readRealTimeLocation(uint8_t slaveAddr)
-{
-  uint32_t send_mail_box;
-  motor_can_tx_msg.StdId = slaveAddr;
-  motor_can_tx_msg.IDE = CAN_ID_STD;
-  motor_can_tx_msg.RTR = CAN_RTR_DATA;
-  motor_can_tx_msg.DLC = 0x02;
-	// CAN_ID = slaveAddr;				//ID
-  txBuffer[0] = 0x31;       //功能码
-  // CanTransfer(txBuffer,2);
+// int32_t realTimeLocation;		//电机实时位置
+// /*
+// 功能：读取实时位置信息
+// 输入：slaveAddr 从机地址
+// 输出：无
+//  */
+// void readRealTimeLocation(uint8_t slaveAddr)
+// {
+//   uint32_t send_mail_box;
+//   motor_can_tx_msg.StdId = slaveAddr;
+//   motor_can_tx_msg.IDE = CAN_ID_STD;
+//   motor_can_tx_msg.RTR = CAN_RTR_DATA;
+//   motor_can_tx_msg.DLC = 0x02;
+// 	// CAN_ID = slaveAddr;				//ID
+//   txBuffer[0] = 0x31;       //功能码
+//   // CanTransfer(txBuffer,2);
   
-  HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, txBuffer, &send_mail_box);
-  int32_t realTimeLocation = (int32_t)(CanRxBuf.Data[3]<<24 | CanRxBuf.Data[4]<<16 | CanRxBuf.Data[5]<<8 | CanRxBuf.Data[6]<<0);
-  return realTimeLocation;
+//   HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, txBuffer, &send_mail_box);
+//   int32_t realTimeLocation = (int32_t)(rxBuffer[3]<<24 | rxBuffer[4]<<16 | rxBuffer[5]<<8 | rxBuffer[6]<<0);
+//   // return realTimeLocation;
+// }
+//返回位置参数指针
+//return 电机参数结构体...
+
+const int32_t *readRealTimeLocation(uint8_t slaveAddr)
+{
+    static int32_t realTimeLocation;  // 静态变量，函数返回后仍然有效
+    uint32_t send_mail_box;
+    // 参数检查  无效地址 
+    if(slaveAddr == 0) {return NULL;  }
+    // 配置 CAN 消息
+    motor_can_tx_msg.StdId = slaveAddr;
+    motor_can_tx_msg.IDE = CAN_ID_STD;
+    motor_can_tx_msg.RTR = CAN_RTR_DATA;
+    motor_can_tx_msg.DLC = 0x02;
+    txBuffer[0] = 0x31;  // 功能码：读取位置
+    
+    // 发送请求
+    if(HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, txBuffer, &send_mail_box) != HAL_OK) {
+        return NULL;  // 发送失败
+    }
+    
+    // 等待接收完成（需要超时机制）
+    uint32_t timeout = HAL_GetTick() + 100;  // 100ms 超时
+    while(HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &motor_can_rx_msg, rxBuffer) != HAL_OK) {
+        if(HAL_GetTick() > timeout) {
+            return NULL;  // 接收超时
+        }
+    }
+    
+    // 解析数据（修正字节拼接，避免符号扩展）
+    realTimeLocation = (int32_t)(
+        ((uint32_t)rxBuffer[3] << 24) | 
+        ((uint32_t)rxBuffer[4] << 16) | 
+        ((uint32_t)rxBuffer[5] << 8)  | 
+        ((uint32_t)rxBuffer[6])
+    );
+    return &realTimeLocation;  // 返回静态变量的地址
 }
+
+
+
 
 void readrealtimelocationrx(){
 }
@@ -196,11 +236,12 @@ uint8_t canCRC_ATM(uint8_t *buf, uint8_t len)
  *          超时无应答           0
  * @note    数据格式：FD + [DIR+SPEED_H] + [SPEED_L] + [ACC] + [PULSES_23:16] + [PULSES_15:8] + [PULSES_7:0] + [CRC]
  */
-uint8_t waitingForACK(uint32_t delayTime)
+boolean_t waitingForACK(void)
 {
   boolean_t retVal = 0; //返回值
   unsigned long sTime;  		//计时起始时刻
   unsigned long time;  			//当前时刻
+  uint32_t delayTime = 3000;
   uint8_t rxByte;      
 	
   sTime = HAL_GetTick();    //获取当前时刻

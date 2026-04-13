@@ -18,12 +18,12 @@
 #ifndef MKSMOT_H
 #define MKSMOT_H
 #include "stm32f4xx_hal.h"
+typedef unsigned char boolean_t;
 
+extern uint8_t txBuffer[8];      //待发送数据数组
+const int32_t *readRealTimeLocation(uint8_t slaveAddr);
 
-uint8_t txBuffer[8];      //待发送数据数组
-extern void readRealTimeLocation(uint8_t slaveAddr);
-
-uint8_t waitingForACK(uint32_t delayTime);//等待从机响应
+boolean_t waitingForACK(void);//等待从机响应
 extern uint8_t getCheckSum(uint8_t *buffer,uint8_t size);  
 void NVIC_INIT(void);
 void runFail(void);
