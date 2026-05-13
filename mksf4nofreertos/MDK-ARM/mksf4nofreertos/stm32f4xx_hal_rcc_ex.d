@@ -28,3 +28,5 @@ mksf4nofreertos\stm32f4xx_hal_rcc_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm3
 mksf4nofreertos\stm32f4xx_hal_rcc_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_flash_ramfunc.h
 mksf4nofreertos\stm32f4xx_hal_rcc_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr.h
 mksf4nofreertos\stm32f4xx_hal_rcc_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
+mksf4nofreertos\stm32f4xx_hal_rcc_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
+mksf4nofreertos\stm32f4xx_hal_rcc_ex.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h

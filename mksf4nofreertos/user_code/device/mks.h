@@ -18,18 +18,23 @@
 #ifndef MKSMOT_H
 #define MKSMOT_H
 #include "stm32f4xx_hal.h"
+#include "stm32f4xx_hal_gpio.h"
 
+//TODO
+//重新cube配置 gpio 接口
+//修改函数标准库 转换。
 
 /*---------定义脉冲接口端口------------*/
-#define En_PORT	GPIOA					 
-#define En_PIN	GPIO_Pin_4		//En  PA4
-#define Stp_PORT	GPIOA
-#define Stp_PIN	GPIO_Pin_5		//Stp	PA5
-#define Dir_PORT	GPIOA
-#define Dir_PIN	GPIO_Pin_6		//Dir	PA6
+#define En_PORT     GPIOB
+#define En_PIN      GPIO_PIN_6     // En  → PB6（未连接任何设备，完全独立）
+#define Stp_PORT    GPIOB
+#define Stp_PIN     GPIO_PIN_7     // Stp → PB7（DCMI_VSYNC，不插摄像头时完全独立）
+#define Dir_PORT    GPIOB
+#define Dir_PIN     GPIO_PIN_8     // Dir → PB8（DCMI_D6，不插摄像头时完全独立）
 
 extern uint8_t stpStatus;
 
+//电机脉冲初始化
 extern void mksPulseInit(void);
 extern void mksPulseRun(void);
 

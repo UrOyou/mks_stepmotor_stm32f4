@@ -17,6 +17,8 @@
 "mksf4nofreertos\stm32f4xx_hal_cortex.o"
 "mksf4nofreertos\stm32f4xx_hal.o"
 "mksf4nofreertos\stm32f4xx_hal_exti.o"
+"mksf4nofreertos\stm32f4xx_hal_tim.o"
+"mksf4nofreertos\stm32f4xx_hal_tim_ex.o"
 "mksf4nofreertos\system_stm32f4xx.o"
 "mksf4nofreertos\mks.o"
 --strict --scatter "mksf4nofreertos\mksf4nofreertos.sct"

@@ -19,6 +19,7 @@
 #include "mks.h"
 #include "core_cm4.h"
 #include "stm32f4xx_hal.h"
+#include "main.h"
 
 typedef unsigned char boolean_t;
 boolean_t CAN_RxDone = 0;
@@ -28,36 +29,44 @@ CAN_TxHeaderTypeDef motor_can_tx_msg;
 CAN_RxHeaderTypeDef motor_can_rx_msg;
 uint8_t txBuffer[8];
 uint8_t rxBuffer[8];
+extern TIM_HandleTypeDef htim3;
 
 /************************  使能脉冲 ***********************************************/
 uint8_t stpStatus = 0;
 
-// void mksPulseInit(void)
-// {
-// 	GPIO_InitTypeDef GPIO_InitStructure;
-// 	/*-----------使能PA,PC端口时钟------------*/
-// 	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOA, ENABLE);
-	
-// 	/*-----------配置 EN/STP/DIR 端口为输出------------*/
-// 	GPIO_InitStructure.GPIO_Pin = En_PIN | Stp_PIN | Dir_PIN;
-// 	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;
-// 	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;
-// 	GPIO_Init(GPIOA, &GPIO_InitStructure);
+void mksPulseInit(void)
+{
+    GPIO_InitTypeDef GPIO_InitStruct = {0};
 
-// 	GPIO_SetBits(En_PORT,En_PIN);					//En 置高电平
-// 	GPIO_ResetBits(Dir_PORT, Dir_PIN);		//Dir置低电平
-// 	GPIO_ResetBits(Stp_PORT, Stp_PIN);		//Stp置低电平
-	
-// 	Timer3_Init();	
-// }
+    /* 1. 时钟改为 GPIOB（AHB1 总线） */
+    __HAL_RCC_GPIOB_CLK_ENABLE();
 
-// void mksPulseRun(void)
-// {
-// 	GPIO_ResetBits(En_PORT,En_PIN);					//En 置低电平
-// 	GPIO_SetBits(Dir_PORT, Dir_PIN);			//Dir置低电平
-	
-// 	TIM_Cmd(TIM3, ENABLE);									//使能TIM3, 翻转Stp信号，产生脉冲
-// }
+    /* 2. 引脚改为 PB6/PB7/PB8 */
+    GPIO_InitStruct.Pin   = En_PIN | Stp_PIN | Dir_PIN;  // 即 PB6 | PB7 | PB8
+    GPIO_InitStruct.Mode  = GPIO_MODE_OUTPUT_PP;
+    GPIO_InitStruct.Pull  = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_HIGH;        // 保持 50 MHz 不变
+
+    /* 3. 初始化端口改为 GPIOB */
+    HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    /* 后续电平设置与定时器初始化保持不变 */
+    HAL_GPIO_WritePin(En_PORT,  En_PIN,  GPIO_PIN_SET);
+    HAL_GPIO_WritePin(Dir_PORT, Dir_PIN, GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(Stp_PORT, Stp_PIN, GPIO_PIN_RESET);
+
+    // MX_TIM3_Init( );
+}
+
+void mksPulseRun(void)
+{
+    HAL_GPIO_WritePin(En_PORT,  En_PIN,  GPIO_PIN_RESET); // En 置低电平
+    HAL_GPIO_WritePin(Dir_PORT, Dir_PIN, GPIO_PIN_SET);   // Dir 置高电平
+                                                          // （原注释“置低”有误，此处保持原逻辑）
+
+    __HAL_TIM_ENABLE(&htim3);                             // 使能 TIM3，翻转 Stp 产生脉冲
+    /* 若采用纯 HAL 函数风格，也可使用：HAL_TIM_Base_Start(&htim3); */
+}
 
 /************************************************************************************/
 
