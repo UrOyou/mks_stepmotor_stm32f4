@@ -20,6 +20,8 @@
 #include "core_cm4.h"
 #include "stm32f4xx_hal.h"
 #include "main.h"
+#include "can.h"
+#include "string.h"
 
 typedef unsigned char boolean_t;
 boolean_t CAN_RxDone = 0;
@@ -109,6 +111,36 @@ const int32_t *readRealTimeLocation(uint8_t slaveAddr)
     return &realTimeLocation;  // 返回静态变量的地址
 }
 
+/* 通用 CRC：addr=从机地址，data=数据域指针，len=数据域长度（不含CRC时len=数据个数，含CRC时len=总长度） */
+static uint8_t calcCRC(uint8_t addr, uint8_t *data, uint8_t len)
+{
+    uint16_t sum = addr;
+    for (uint8_t i = 0; i < len; i++) {
+        sum += data[i];
+    }
+    return (uint8_t)(sum & 0xFF);
+}
+
+void setMotorEnable(uint8_t slaveAddr, uint8_t enable)
+{
+    uint32_t mailbox;
+    uint8_t data[3];
+
+    memset(&motor_can_tx_msg, 0, sizeof(motor_can_tx_msg));
+    motor_can_tx_msg.StdId = slaveAddr;
+    motor_can_tx_msg.IDE = CAN_ID_STD;
+    motor_can_tx_msg.RTR = CAN_RTR_DATA;
+    motor_can_tx_msg.DLC = 3;
+
+    data[0] = 0xF3;       // 功能码：使能控制
+    data[1] = enable;      // 0x00=关闭, 0x01=使能
+    data[2] = calcCRC(slaveAddr, data, 2);
+
+    HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, data, &mailbox);
+    HAL_Delay(50);
+}
+/* 使用示例：setMotorEnable(1, 1);  // 使能 */
+
 /*
 功能：串口发送速度模式运行指令
 输入：slaveAddr 从机地址
@@ -125,13 +157,33 @@ void speedModeRun(uint8_t slaveAddr,uint8_t dir,uint16_t speed,uint8_t acc)
   motor_can_tx_msg.DLC = 0x05;
 	//CAN_ID = slaveAddr;				//ID
 
+  // memset(&motor_can_tx_msg, 0, sizeof(motor_can_tx_msg));
   txBuffer[0] = 0xF6;       //功能码
   txBuffer[1] = (dir<<7) | ((speed>>8)&0x0F); //方向和速度高4位
   txBuffer[2] = speed&0x00FF;   //速度低8位
   txBuffer[3] = acc;            //加速度
-	// CanTransfer(txBuffer,5);
+
+	txBuffer[4] = calcCRC(slaveAddr,txBuffer,4);
+
   HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, txBuffer, &send_mail_box);
 
+    
+  // 检查邮箱空闲数
+  uint32_t free = HAL_CAN_GetTxMailboxesFreeLevel(&hcan1);
+    
+  // 检查错误状态
+  uint32_t err = HAL_CAN_GetError(&hcan1);
+  uint32_t esr = hcan1.Instance->ESR;
+  // uint32_t lec = (esr >> 24) & 0x07;  // Last Error Code
+    
+  // 组装报文...
+  HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, txBuffer, &send_mail_box);
+    
+  if (status != HAL_OK) {
+      // 如果走到这里，说明邮箱满了或参数错误
+      // 在 err 和 lec 上打断点
+      // __BKPT(0);  // 触发断点
+  }
 }
 
 /**
@@ -182,17 +234,6 @@ void NVIC_INIT(void)
 }
 
 
-// 计算校验和（算法不变，仅类型调整）
-uint8_t canCRC_ATM(uint8_t *buf, uint8_t len)
-{
-    uint32_t sum = 0;
-    for (uint8_t i = 0; i < len; i++)
-    {
-        sum += buf[i];
-    }
-    sum += CAN_ID;
-    return (uint8_t)(sum & 0xFF);
-}
 
 
 /**
@@ -209,7 +250,6 @@ boolean_t waitingForACK(void)
   boolean_t retVal = 0; //返回值
   unsigned long sTime;  		//计时起始时刻
   unsigned long time;  			//当前时刻
-  uint32_t delayTime = 3000;
   uint8_t rxByte;      
 	
   sTime = HAL_GetTick();    //获取当前时刻
@@ -218,17 +258,19 @@ boolean_t waitingForACK(void)
 		if(CAN_RxDone == 1)  //CAN接收到数据
 		{
 			CAN_RxDone = 0;
-			rxByte = motor_can_rx_msg.DLC;
-			CAN_ID = motor_can_rx_msg.StdId;
-			if(rxBuffer[rxByte-1] == canCRC_ATM(rxBuffer,rxByte-1))
+
+			rxByte = CanRxHeader.DLC;
+			CAN_ID = CanRxHeader.StdId;
+
+			if(CanRxData[rxByte-1] == calcCRC(CAN_ID,CanRxData,rxByte-1))
 			{
-				retVal = rxBuffer[1];   //校验正确
+				retVal = 1;   //校验正确
 				break;
 			}				
 		}
 
     time = HAL_GetTick();
-    if((delayTime != 0) && ((time - sTime) > delayTime))   //判断是否超时
+    if(((time - sTime) > 3000))   //判断是否超时
     {
       retVal = 0;
       break;                    //超时，退出while(1)

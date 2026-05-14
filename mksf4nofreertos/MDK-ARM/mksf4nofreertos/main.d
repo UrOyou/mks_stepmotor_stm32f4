@@ -32,3 +32,5 @@ mksf4nofreertos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex
 mksf4nofreertos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mksf4nofreertos\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mksf4nofreertos\main.o: ..\user_code\device\mks.h
+mksf4nofreertos\main.o: ..\user_code\bsp\can.h
+mksf4nofreertos\main.o: ..\user_code\bsp\led.h

@@ -18,11 +18,12 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
-#include "mks.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "mks.h"
+#include "can.h"
+#include "led.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -84,7 +85,7 @@ int main(void)
   HAL_Init();
 
   /* USER CODE BEGIN Init */
-
+  
   /* USER CODE END Init */
 
   /* Configure the system clock */
@@ -96,32 +97,61 @@ int main(void)
 
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
+  MX_CAN1_Init();
+  MX_TIM3_Init();
+	led_init();
   /* USER CODE BEGIN 2 */
+  can_filter_init();
   // mksPulseInit();			//初始化脉冲接口
-	mksPulseRun();			//开始生成脉冲信号
+	// mksPulseRun();			//开始生成脉冲信号
+  // setMotorMode(1,);//修改电机控制模式
+  setMotorEnable(1,1);
+  speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+  
+  // LED1(0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
     {
-      // const int32_t *ptr = readRealTimeLocation(0x01);
-      // g_motor_pos_ptr = ptr;        // 保存到全局
-      
-      // if(ptr) {
-      //     g_motor_pos_value = *ptr;  // 解引用保存
-      // }     
-      
-      //   HAL_Delay(100);
-      //   ackStatus = waitingForACK();   //等待电机应答
-      //   HAL_Delay(3000);     //延时3000ms
+      HAL_Delay(100);
       speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+
+    // ackStatus = waitingForACK();   //等待电机应答
+		// if(ackStatus == 1)        //运行成功
+		// {
+		// 	runSpeed += 100;        //速度增加100RPM
+		// 	if(runSpeed > 300)     //改变速度和方向
+		// 	{
+		// 		runSpeed = 0;         //速度设置为0
+		// 		runDir ^= 1;          //改变方向
+		// 	}
+		// }
+		// else                      //运行失败
+		// {
+		// 	runFail();
+		// }
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
     }
   /* USER CODE END 3 */
 }
+
+//运行失败
+void runFail(void)
+{
+			while(1)                //快速闪灯，提示运行失败
+			{
+				LED0(0);
+				HAL_Delay(200);
+				LED0(1);
+				HAL_Delay(200);
+			}	
+}
+
+
 
 /**
   * @brief System Clock Configuration
@@ -192,15 +222,15 @@ static void MX_CAN1_Init(void)
 
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
-  hcan1.Init.Prescaler = 16;
+  hcan1.Init.Prescaler = 6;
   hcan1.Init.Mode = CAN_MODE_NORMAL;
   hcan1.Init.SyncJumpWidth = CAN_SJW_1TQ;
-  hcan1.Init.TimeSeg1 = CAN_BS1_1TQ;
-  hcan1.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan1.Init.TimeSeg1 = CAN_BS1_12TQ;   // ← 改这里
+  hcan1.Init.TimeSeg2 = CAN_BS2_2TQ;    // ← 改这里
   hcan1.Init.TimeTriggeredMode = DISABLE;
-  hcan1.Init.AutoBusOff = DISABLE;
+  hcan1.Init.AutoBusOff = ENABLE;
   hcan1.Init.AutoWakeUp = DISABLE;
-  hcan1.Init.AutoRetransmission = DISABLE;
+  hcan1.Init.AutoRetransmission = ENABLE;
   hcan1.Init.ReceiveFifoLocked = DISABLE;
   hcan1.Init.TransmitFifoPriority = DISABLE;
   if (HAL_CAN_Init(&hcan1) != HAL_OK)
@@ -269,14 +299,6 @@ static void MX_TIM3_Init(void)
   {
     Error_Handler();
   }
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_4) != HAL_OK)
-  {
-    Error_Handler();
-  }
   /* USER CODE BEGIN TIM3_Init 2 */
 
   /* USER CODE END TIM3_Init 2 */
@@ -303,7 +325,8 @@ static void MX_GPIO_Init(void)
   __HAL_RCC_GPIOB_CLK_ENABLE();
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7
+                          |GPIO_PIN_8, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC13 */
   GPIO_InitStruct.Pin = GPIO_PIN_13;
@@ -317,8 +340,10 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(GPIOH, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PB6 PB7 PB8 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6|GPIO_PIN_7|GPIO_PIN_8;
+  /*Configure GPIO pins : PB0 PB1 PB6 PB7
+                           PB8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_0|GPIO_PIN_1|GPIO_PIN_6|GPIO_PIN_7
+                          |GPIO_PIN_8;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;

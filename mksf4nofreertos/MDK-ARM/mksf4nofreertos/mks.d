@@ -33,3 +33,5 @@ mksf4nofreertos\mks.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim.h
 mksf4nofreertos\mks.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_tim_ex.h
 mksf4nofreertos\mks.o: ../Drivers/CMSIS/Include/core_cm4.h
 mksf4nofreertos\mks.o: ../Core/Inc/main.h
+mksf4nofreertos\mks.o: ..\user_code\bsp\can.h
+mksf4nofreertos\mks.o: E:\SOFTWARE\WorkStation\Code\Keil5\core\ARM\ARMCC\Bin\..\include\string.h

@@ -18,9 +18,10 @@
 #ifndef _CAN
 #define _CAN
 #include "stm32f4xx_hal.h"
+extern CAN_RxHeaderTypeDef CanRxHeader;        // ID/DLC/IDE/RTR 等头信息
+extern uint8_t CanRxData[8];                   // Data[8]
 
 extern void can_filter_init(void);
 extern uint8_t CAN_RxDone;
 
 #endif //_CAN
-s
