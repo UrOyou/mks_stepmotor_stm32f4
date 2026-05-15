@@ -32,6 +32,7 @@ CAN_RxHeaderTypeDef motor_can_rx_msg;
 uint8_t txBuffer[8];
 uint8_t rxBuffer[8];
 extern TIM_HandleTypeDef htim3;
+uint8_t freq = 1;
 
 /************************  使能脉冲 ***********************************************/
 uint8_t stpStatus = 0;
@@ -139,7 +140,6 @@ void setMotorEnable(uint8_t slaveAddr, uint8_t enable)
     HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, data, &mailbox);
     HAL_Delay(50);
 }
-/* 使用示例：setMotorEnable(1, 1);  // 使能 */
 
 /*
 功能：串口发送速度模式运行指令
@@ -277,4 +277,45 @@ boolean_t waitingForACK(void)
     }
   }
   return(retVal);
+}
+
+//运动模式测试  成功停止
+void speedtimemode(void)
+{ 
+  uint8_t motor_id = 2;
+  uint16_t runSpeed= 400;    //电机运行速度
+  //uint8_t runDir  = 0;      //电机运行方向 1为逆时针 0为顺时针
+                            //实际推杆测试 0为反转回收  1为正转伸长
+  
+
+  if (freq == 1 ){ //运行一次停止
+    speedModeRun(motor_id,1,runSpeed,10); //从机地址=1，加速度=2
+    HAL_Delay(5000);
+    speedModeRun(motor_id,0,runSpeed,10); //从机地址=1，加速度=2
+    HAL_Delay(5000);
+    freq = 0;
+    HAL_Delay(300);
+  }else{
+    speedModeRun(motor_id,0,0,0); //从机地址=1，加速度=2
+  }
+  // else if (freq == 2)
+  // {
+  //   speedModeRun(motor_id,0,runSpeed,10); //从机地址=1，加速度=2
+  //   HAL_Delay(5000);
+  //   freq = 0;
+  //   HAL_Delay(300);
+  // }
+ 
+  
+
+}
+
+void multimotor(void)
+{
+
+    uint16_t runSpeed= 100;    //电机运行速度
+    uint8_t runDir  = 1;      //电机运行方向 1为逆时针 0为顺时针
+    
+    speedtimemode();
+    speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
 }

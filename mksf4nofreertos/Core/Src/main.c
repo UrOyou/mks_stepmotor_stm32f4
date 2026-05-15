@@ -105,8 +105,11 @@ int main(void)
   // mksPulseInit();			//初始化脉冲接口
 	// mksPulseRun();			//开始生成脉冲信号
   // setMotorMode(1,);//修改电机控制模式
-  setMotorEnable(1,1);
-  speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+
+  setMotorEnable(1,1);//电机使能
+  setMotorEnable(2,1);//电机使能
+
+  // speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
   
   // LED1(0);
   /* USER CODE END 2 */
@@ -116,7 +119,10 @@ int main(void)
   while (1)
     {
       HAL_Delay(100);
-      speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+      // speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+      // positionMode1Run(1,runDir,100,200,32000); //从机地址=1，转速=100RPM，加速度=200，脉冲数=32000(10圈) 
+      speedtimemode();//多机时控测试
+
 
     // ackStatus = waitingForACK();   //等待电机应答
 		// if(ackStatus == 1)        //运行成功
