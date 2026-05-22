@@ -727,6 +727,11 @@
               <FileType>1</FileType>
               <FilePath>..\user_code\bsp\led.c</FilePath>
             </File>
+            <File>
+              <FileName>key.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user_code\bsp\key.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

@@ -23,6 +23,7 @@
 "mksf4nofreertos\mks.o"
 "mksf4nofreertos\can.o"
 "mksf4nofreertos\led.o"
+"mksf4nofreertos\key.o"
 --strict --scatter "mksf4nofreertos\mksf4nofreertos.sct"
 --summary_stderr --info summarysizes --map --load_addr_map_info --xref --callgraph --symbols
 --info sizes --info totals --info unused --info veneers

@@ -24,6 +24,7 @@
 #include "mks.h"
 #include "can.h"
 #include "led.h"
+#include "key.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -33,9 +34,12 @@
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-uint16_t runSpeed= 100;    //电机运行速度
+uint16_t runSpeed= 400;    //电机运行速度
+uint8_t motor_id  = 1;      //电机canid
 uint8_t runDir  = 0;      //电机运行方向 1为逆时针 0为顺时针
 uint8_t ackStatus = 0;
+uint8_t key_pressed = 0; //按键状态
+
 // const int32_t *g_motor_pos_ptr = NULL;   // 全局指针
 // int32_t g_motor_pos_value = 0;            // 全局值
 /* USER CODE END PD */
@@ -102,16 +106,17 @@ int main(void)
 	led_init();
   /* USER CODE BEGIN 2 */
   can_filter_init();
+  key_init();
   // mksPulseInit();			//初始化脉冲接口
 	// mksPulseRun();			//开始生成脉冲信号
   // setMotorMode(1,);//修改电机控制模式
 
   setMotorEnable(1,1);//电机使能
-  setMotorEnable(2,1);//电机使能
+  // setMotorEnable(2,1);//电机使能
+	
 
-  // speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+  s_state = ST_IDLE;
   
-  // LED1(0);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -121,7 +126,15 @@ int main(void)
       HAL_Delay(100);
       // speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
       // positionMode1Run(1,runDir,100,200,32000); //从机地址=1，转速=100RPM，加速度=200，脉冲数=32000(10圈) 
-      speedtimemode();//多机时控测试
+      // speedtimemode();//多机时控测试
+      Telescopic_Handler(motor_id, runSpeed);  
+      HAL_Delay(50);
+      key_pressed = key_scan(0);
+      
+
+      if (key_pressed != 0) {
+        Telescopic_Start(key_pressed);  /* 触发一次伸缩 */
+      }
 
 
     // ackStatus = waitingForACK();   //等待电机应答

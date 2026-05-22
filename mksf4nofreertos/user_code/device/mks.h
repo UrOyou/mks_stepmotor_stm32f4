@@ -31,6 +31,29 @@
 #define Stp_PIN     GPIO_PIN_7     // Stp → PB7（DCMI_VSYNC，不插摄像头时完全独立）
 #define Dir_PORT    GPIOB
 #define Dir_PIN     GPIO_PIN_8     // Dir → PB8（DCMI_D6，不插摄像头时完全独立）
+#define ElbowMotorID  1
+
+/*============================ 宏定义 ============================*/
+#define DIR_EXTEND      1u          /* 伸长方向 */
+#define DIR_RETRACT     0u          /* 收缩方向 */
+#define DIR_STOP        0u          /* 停止 */
+#define TIME_EXTEND_MS  5000u       /* 伸长保持时间(ms) */
+#define TIME_RETRACT_MS 5000u       /* 收缩保持时间(ms) */
+#define ACCEL_PARAM     4u         /* 加速度 */
+
+/*============================ 状态机 ============================*/
+typedef enum {
+    ST_IDLE = 0,            /* 停止/待机 */
+    ST_EXTEND_START,        /* 启动伸长 */
+    ST_EXTEND_WAIT,         /* 伸长等待 */
+    ST_RETRACT_START,       /* 启动收缩 */
+    ST_RETRACT_WAIT,        /* 收缩等待 */
+} TelescopicState_t;
+
+/*============================ 模块变量 ============================*/
+static TelescopicState_t  s_state = ST_IDLE;
+static uint32_t           s_tick  = 0u;
+/*==================================================================*/
 
 extern uint8_t stpStatus;
 
@@ -66,7 +89,11 @@ extern void positionMode3Run(uint8_t slaveAddr,uint16_t speed,uint8_t acc,int32_
 //运动模式测试
 extern void speedtimemode(void);
 
-//多机协动测试
+//多机协动
 extern void multimotor(void);
+extern void ShoudlerMotorRun(uint8_t dir);
+extern void SingleArmMove(void);
+extern void Telescopic_Start(uint8_t key_pressed); 
+extern void Telescopic_Handler(uint8_t motor_id, uint16_t runSpeed);
 
 #endif //MKSMOT_H

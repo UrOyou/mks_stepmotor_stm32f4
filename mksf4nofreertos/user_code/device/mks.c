@@ -22,6 +22,7 @@
 #include "main.h"
 #include "can.h"
 #include "string.h"
+#include "key.h"
 
 typedef unsigned char boolean_t;
 boolean_t CAN_RxDone = 0;
@@ -32,7 +33,16 @@ CAN_RxHeaderTypeDef motor_can_rx_msg;
 uint8_t txBuffer[8];
 uint8_t rxBuffer[8];
 extern TIM_HandleTypeDef htim3;
+
+//uint8_t runDir  = 0;      //电机运行方向 1为逆时针 0为顺时针
+                            //实际推杆测试 0为反转回收  1为正转伸长
+
 uint8_t freq = 1;
+uint8_t elbow_motor_id = 1; //肘部 电机id
+uint16_t elbow_runSpeed= 400;    //肘部 电机运行速度
+uint32_t shoulder_runtime = 1000;//肩部  减速电机推杆  伸展控制时间
+uint32_t elbow_runtime = 1000;//肘部  步进电机推杆  伸展运行时间
+
 
 /************************  使能脉冲 ***********************************************/
 uint8_t stpStatus = 0;
@@ -70,7 +80,6 @@ void mksPulseRun(void)
     __HAL_TIM_ENABLE(&htim3);                             // 使能 TIM3，翻转 Stp 产生脉冲
     /* 若采用纯 HAL 函数风格，也可使用：HAL_TIM_Base_Start(&htim3); */
 }
-
 /************************************************************************************/
 
 
@@ -155,35 +164,15 @@ void speedModeRun(uint8_t slaveAddr,uint8_t dir,uint16_t speed,uint8_t acc)
   motor_can_tx_msg.IDE = CAN_ID_STD;
   motor_can_tx_msg.RTR = CAN_RTR_DATA;
   motor_can_tx_msg.DLC = 0x05;
-	//CAN_ID = slaveAddr;				//ID
 
-  // memset(&motor_can_tx_msg, 0, sizeof(motor_can_tx_msg));
   txBuffer[0] = 0xF6;       //功能码
   txBuffer[1] = (dir<<7) | ((speed>>8)&0x0F); //方向和速度高4位
   txBuffer[2] = speed&0x00FF;   //速度低8位
   txBuffer[3] = acc;            //加速度
-
 	txBuffer[4] = calcCRC(slaveAddr,txBuffer,4);
 
   HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, txBuffer, &send_mail_box);
 
-    
-  // 检查邮箱空闲数
-  uint32_t free = HAL_CAN_GetTxMailboxesFreeLevel(&hcan1);
-    
-  // 检查错误状态
-  uint32_t err = HAL_CAN_GetError(&hcan1);
-  uint32_t esr = hcan1.Instance->ESR;
-  // uint32_t lec = (esr >> 24) & 0x07;  // Last Error Code
-    
-  // 组装报文...
-  HAL_StatusTypeDef status = HAL_CAN_AddTxMessage(&hcan1, &motor_can_tx_msg, txBuffer, &send_mail_box);
-    
-  if (status != HAL_OK) {
-      // 如果走到这里，说明邮箱满了或参数错误
-      // 在 err 和 lec 上打断点
-      // __BKPT(0);  // 触发断点
-  }
 }
 
 /**
@@ -279,7 +268,7 @@ boolean_t waitingForACK(void)
   return(retVal);
 }
 
-//运动模式测试  成功停止
+//单机运动模式测试  成功停止
 void speedtimemode(void)
 { 
   uint8_t motor_id = 2;
@@ -289,33 +278,167 @@ void speedtimemode(void)
   
 
   if (freq == 1 ){ //运行一次停止
-    speedModeRun(motor_id,1,runSpeed,10); //从机地址=1，加速度=2
+    speedModeRun(motor_id,1,runSpeed,10); //从机地址=2,伸长
     HAL_Delay(5000);
-    speedModeRun(motor_id,0,runSpeed,10); //从机地址=1，加速度=2
+    freq = 2;
+    
+  }else if (freq == 2){
+    speedModeRun(motor_id,0,runSpeed,10); //从机地址=2，收缩
     HAL_Delay(5000);
     freq = 0;
-    HAL_Delay(300);
-  }else{
-    speedModeRun(motor_id,0,0,0); //从机地址=1，加速度=2
-  }
-  // else if (freq == 2)
-  // {
-  //   speedModeRun(motor_id,0,runSpeed,10); //从机地址=1，加速度=2
-  //   HAL_Delay(5000);
-  //   freq = 0;
-  //   HAL_Delay(300);
-  // }
- 
-  
 
+  }
+  else{
+    speedModeRun(motor_id,0,0,0); //从机地址=2，停止
+    HAL_Delay(300);
+  }
+  
 }
 
+//多机测试
 void multimotor(void)
 {
-
-    uint16_t runSpeed= 100;    //电机运行速度
-    uint8_t runDir  = 1;      //电机运行方向 1为逆时针 0为顺时针
+  uint16_t runSpeed= 100;    //电机运行速度
+  uint8_t runDir  = 1;      //电机运行方向 1为逆时针 0为顺时针
     
-    speedtimemode();
-    speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+  speedtimemode();
+  speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
+}
+
+//步进电机时间控制
+void MotorRunTimeCtrl(uint8_t motor_id){
+  uint8_t freqt = 1;
+  uint16_t runSpeed= 400;    //电机运行速度
+
+  if (freqt == 1 ){ //运行一次停止
+    speedModeRun(motor_id,1,runSpeed,10); //从机地址=1，加速度=2
+    HAL_Delay(5000);
+    freqt = 0;
+  }else{//绝对不改，绝对不改，绝对不改。
+    speedModeRun(motor_id,0,0,0); //从机地址=1，加速度=2
+    HAL_Delay(300);
+  }
+}
+
+
+//肩部减速电机控制，方向参数
+void ShoudlerMotorRun(uint8_t dir)
+{
+  uint8_t motordir = dir;
+  //两个io口 控制
+  if (motordir == 1)   //电机伸展
+  {
+    //io引脚
+
+    motordir = 0;
+  }
+  else if(motordir == 2)   //电机收缩
+  {
+    //io引脚
+
+    motordir = 0;
+
+  }
+  else{//电机停止
+    //io引脚
+
+    motordir = 0;
+  }
+    
+}
+
+
+//单臂整体机构伸展进程
+void SingleArmMove(void)
+{
+
+  //添加 开发板按键控制
+  //或是定时伸展 
+
+  if (freq == 1 ){ //运行一次停止
+    speedModeRun(ElbowMotorID,1,elbow_runSpeed,10); //肘部电机，加速度=10，运动方向伸长
+    HAL_Delay(elbow_runtime);   //伸长时间
+    //肩部减速电机伸长
+    //ShoudlerMotorRun(1)
+
+    freq = 0;   //计数重置
+  }else{
+    HAL_Delay(100);
+    speedModeRun(ElbowMotorID,0,0,0); //电机停止
+  }
+}
+
+
+/**
+ * @brief  触发一次"伸长→收缩"周期
+ * @param  key_pressed:  输入按键信号
+ * @retval 无
+ * @note   仅在 IDLE 状态下有效，运行中调用无效（防重入）
+ */
+void Telescopic_Start(uint8_t key_pressed)
+{
+    if (s_state == ST_IDLE) {
+      if(key_pressed == 1){
+        s_state = ST_EXTEND_START;
+      }else if (key_pressed == 2){
+        s_state = ST_RETRACT_START;
+      }else {
+        s_state = ST_IDLE;
+      }
+        
+    }
+}
+
+/**
+ * @brief  伸缩状态机轮询处理
+ * @param  motor_id:  电机从机地址
+ * @param  runSpeed:  目标速度
+ * @retval 无
+ * @note   需在主循环中周期性调用，建议调用周期 1~10ms
+ */
+void Telescopic_Handler(uint8_t motor_id, uint16_t runSpeed)
+{
+    switch (s_state) {
+        /* ---------- 空闲 ---------- */
+        case ST_IDLE:
+            speedModeRun(motor_id, DIR_STOP, 0, ACCEL_PARAM);
+            break;
+
+        /* ---------- 伸长启动 ---------- */
+        case ST_EXTEND_START:
+            speedModeRun(motor_id, DIR_EXTEND, runSpeed, ACCEL_PARAM);
+            s_tick  = HAL_GetTick();
+            s_state = ST_EXTEND_WAIT;
+            break;
+
+        /* ---------- 伸长等待 ---------- */
+        case ST_EXTEND_WAIT:
+            if ((HAL_GetTick() - s_tick) >= TIME_EXTEND_MS) {
+                // s_state = ST_RETRACT_START;
+                s_state = ST_IDLE; //先等待
+            }
+            break;
+
+        /* ---------- 收缩启动 ---------- */
+        case ST_RETRACT_START:
+            speedModeRun(motor_id, DIR_RETRACT, runSpeed, ACCEL_PARAM);
+            s_tick  = HAL_GetTick();
+            s_state = ST_RETRACT_WAIT;
+            break;
+				
+
+        /* ---------- 收缩等待 ---------- */
+        case ST_RETRACT_WAIT:
+            if ((HAL_GetTick() - s_tick) >= TIME_RETRACT_MS) {
+                speedModeRun(motor_id, DIR_STOP, 0, ACCEL_PARAM);
+                s_state = ST_IDLE;      /* 周期结束，回归空闲 */
+            }
+            break;
+
+        /* ---------- 异常/非法状态 ---------- */
+        default:
+            speedModeRun(motor_id, DIR_STOP, 0, ACCEL_PARAM);
+            s_state = ST_IDLE;
+            break;
+    }
 }
