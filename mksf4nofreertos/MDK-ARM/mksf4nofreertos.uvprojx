@@ -732,6 +732,11 @@
               <FileType>1</FileType>
               <FilePath>..\user_code\bsp\key.c</FilePath>
             </File>
+            <File>
+              <FileName>hmoto.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\user_code\device\hmoto.c</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

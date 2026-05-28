@@ -25,6 +25,8 @@
 #include "can.h"
 #include "led.h"
 #include "key.h"
+#include "hmoto.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -107,6 +109,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   can_filter_init();
   key_init();
+  hmoto_Init();
   // mksPulseInit();			//初始化脉冲接口
 	// mksPulseRun();			//开始生成脉冲信号
   // setMotorMode(1,);//修改电机控制模式
@@ -127,13 +130,15 @@ int main(void)
       // speedModeRun(1,runDir,runSpeed,2); //从机地址=1，加速度=2
       // positionMode1Run(1,runDir,100,200,32000); //从机地址=1，转速=100RPM，加速度=200，脉冲数=32000(10圈) 
       // speedtimemode();//多机时控测试
-      Telescopic_Handler(motor_id, runSpeed);  
+      // Telescopic_Handler(motor_id, runSpeed);  
       HAL_Delay(50);
       key_pressed = key_scan(0);
       
 
       if (key_pressed != 0) {
-        Telescopic_Start(key_pressed);  /* 触发一次伸缩 */
+        // Telescopic_Start(key_pressed);  /* 触发一次伸缩 */
+        MotorA_Forward(0);
+        HAL_Delay(300);
       }
 
 

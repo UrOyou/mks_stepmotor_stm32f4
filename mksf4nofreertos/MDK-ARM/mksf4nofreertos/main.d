@@ -35,3 +35,4 @@ mksf4nofreertos\main.o: ..\user_code\device\mks.h
 mksf4nofreertos\main.o: ..\user_code\bsp\can.h
 mksf4nofreertos\main.o: ..\user_code\bsp\led.h
 mksf4nofreertos\main.o: ..\user_code\bsp\key.h
+mksf4nofreertos\main.o: ..\user_code\device\hmoto.h
