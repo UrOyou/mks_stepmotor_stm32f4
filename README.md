@@ -1,7 +1,15 @@
-# mks_stepmotor_stm32f4
-基于stm32f429 hal库 使用CAN控制 步进电机
+# mks_stepmotor_stm32f429
+[![Build Status](https://img.shields.io/badge/build-passing-yellow)]() 
+[![Platform](https://img.shields.io/badge/platform-STM32F429-blue)]() 
+[![License](https://img.shields.io/badge/license-MIT-green)]()
 
-- 使用 ： MKS SERVO28D和42D 驱动板和28步进电机和42步进电机 
+
+基于 STM32F429 的 MKS 步进电机 + H 桥减速电机综合控制系统。支持闭环位置/速度控制、电流监测及 PWM 软启动保护。
+
+
+
+## 硬件平台
+- 使用 ： MKS SERVO28D和42D 驱动板和28步进电机和42步进电机
 
 - 主控：stm32f429igtx 正点原子阿波罗开发板
 
@@ -23,7 +31,9 @@ H桥电机驱动板：https://item.taobao.com/item.htm?id=569591305325&mi_id=000
 - 读取电机位置电流误差
 - 设置电流工作模式
 - 位置控制电机 
-- 速度控制电机 （已成功实验）
+- 速度控制电机 （完成单独测试）
 
 减速电机推杆（肩部）    代码文件：**hmoto.c**
-- H桥控制驱动
+- H桥控制驱动   （完成单独测试）
+- pwm 斜坡启动  （完成单独测试）
+

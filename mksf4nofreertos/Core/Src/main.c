@@ -132,13 +132,18 @@ int main(void)
       // speedtimemode();//多机时控测试
       // Telescopic_Handler(motor_id, runSpeed);  
       HAL_Delay(50);
-      key_pressed = key_scan(0);
+      key_pressed = key_scan(0);  
+      Motor_Process();
       
+      // MotorPower_Set(3600);
 
       if (key_pressed != 0) {
         // Telescopic_Start(key_pressed);  /* 触发一次伸缩 */
-        MotorA_Forward(0);
-        HAL_Delay(300);
+        //MotorA_Forward
+        //MotorA_Backward
+        // MotorA_Backward(900);
+        Motor_Set(7200);
+        HAL_Delay(280);
       }
 
 
@@ -267,67 +272,59 @@ static void MX_CAN1_Init(void)
 
 }
 
-/**
-  * @brief TIM3 Initialization Function
-  * @param None
-  * @retval None
-  */
 static void MX_TIM3_Init(void)
 {
+    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+    TIM_OC_InitTypeDef sConfigOC = {0};
 
-  /* USER CODE BEGIN TIM3_Init 0 */
+    /* 时基配置：90MHz / 7200 = 12.5kHz */
+    htim3.Instance               = TIM3;
+    htim3.Init.Prescaler         = 0;                           // 90 MHz 不分频
+    htim3.Init.CounterMode       = TIM_COUNTERMODE_UP;            // 向上计数
+    htim3.Init.Period            = 7199;                        // 0~7199 共 7200 级
+    htim3.Init.ClockDivision     = TIM_CLOCKDIVISION_DIV1;
+    htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE; // 修改 ARR 时无毛刺
 
-  /* USER CODE END TIM3_Init 0 */
+    if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
-  TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-  TIM_MasterConfigTypeDef sMasterConfig = {0};
-  TIM_OC_InitTypeDef sConfigOC = {0};
+    /* 时钟源：内部时钟 */
+    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+    if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
-  /* USER CODE BEGIN TIM3_Init 1 */
+    /* 初始化 PWM 功能 */
+    if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
-  /* USER CODE END TIM3_Init 1 */
-  htim3.Instance = TIM3;
-  htim3.Init.Prescaler = 0;
-  htim3.Init.CounterMode = TIM_COUNTERMODE_UP;
-  htim3.Init.Period = 65535;
-  htim3.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-  htim3.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
-  if (HAL_TIM_Base_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-  if (HAL_TIM_ConfigClockSource(&htim3, &sClockSourceConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_Init(&htim3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-  if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  sConfigOC.OCMode = TIM_OCMODE_PWM1;
-  sConfigOC.Pulse = 0;
-  sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-  sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN TIM3_Init 2 */
+    /* 主模式：独立运行，不触发其他外设 */
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode   = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim3, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
 
-  /* USER CODE END TIM3_Init 2 */
-  HAL_TIM_MspPostInit(&htim3);
+    /* PWM 通道配置：仅保留 CH2（PB5） */
+    sConfigOC.OCMode       = TIM_OCMODE_PWM1;
+    sConfigOC.Pulse        = 0;                      // 初始占空比 0
+    sConfigOC.OCPolarity   = TIM_OCPOLARITY_HIGH;    // 高电平有效
+    sConfigOC.OCFastMode   = TIM_OCFAST_DISABLE;
 
+    if (HAL_TIM_PWM_ConfigChannel(&htim3, &sConfigOC, TIM_CHANNEL_2) != HAL_OK)
+    {
+        Error_Handler();
+    }
+
+    /* 启动 GPIO 复用配置 */
+    HAL_TIM_MspPostInit(&htim3);
 }
 
 /**
